@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Remover</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        h2{
+            font-size: 35px;
+        }
+
+        form {
+            margin: 20px auto;
+            max-width: 300px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="file"] {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button {
+            background: #ff512f;
+            background: linear-gradient(to right, #ff512f, #f09819);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            font-size: 15px;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(255, 81, 47, 0.4);
+        }
+
+        #result {
+            margin-top: 30px;
+            display: flex;
+           flex-direction: column;
+           justify-content: center;
+           align-items: center;
+        }
+
+        #outputImage {
+            max-width: 100%;
+            max-height: 400px;
+            display: none;
+            border-radius: 10px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        #downloadButton {
+            display: none;
+            margin-top: 10px;
+            background: #00c6ff;
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #downloadButton:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(0, 198, 255, 0.4);
+        }
+
+        #processingBar {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #processingBar span {
+            display: block;
+            width: 0;
+            height: 10px;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            border-radius: 5px;
+            animation: progress 2s linear infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 500px){
+            h1{
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Remove Image Background Instantly</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="fileInput" name="file" accept="image/*" required>
+        <button type="submit">Upload</button>
+    </form>
+    
+
+    <div id="processingBar">
+        <h3>Processing your image...</h3>
+        <span></span>
+    </div>
+
+    <div style="display: flex;" id="result">
+        <h2>Result:</h2>
+        <img id="outputImage" alt="Processed image will appear here">
+        <br>
+        <button id="downloadButton">Download Image</button>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('fileInput');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const processingBar = document.getElementById('processingBar');
+            const result = document.getElementById('result');
+            const outputImage = document.getElementById('outputImage');
+            const downloadButton = document.getElementById('downloadButton');
+
+            result.style.display = 'none';
+            outputImage.style.display = 'none';
+            downloadButton.style.display = 'none';
+            processingBar.style.display = 'block';
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const imageUrl = URL.createObjectURL(blob);
+                outputImage.src = imageUrl;
+                outputImage.style.display = 'block';
+
+                downloadButton.style.display = 'inline-block';
+                downloadButton.onclick = () => {
+                    const fileName = prompt("Enter the name for the downloaded image:", "output");
+                    if (fileName) {
+                        const link = document.createElement('a');
+                        link.href = imageUrl;
+                        link.download = `${fileName}.png`;
+                        link.click();
+                    }
+                };
+
+                processingBar.style.display = 'none';
+                result.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                processingBar.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
